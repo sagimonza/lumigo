@@ -9,6 +9,7 @@ const OUTPUT_LOG_PATH = "./output.log";
 // todo: handle termination of the current process - gracefully terminate workers and don't accept incoming requests
 // todo: optimize data structure for workers - members should be removed faster
 // todo: add restrictions to constructor options
+// todo: logs + tracing, error handling
 
 class FunctionsManager {
   _busyWorkers = [];
