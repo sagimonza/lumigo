@@ -4,7 +4,7 @@ const Queue = require("./queue");
 
 const queue = new Queue({
   connectionConfig: {
-    host: "localhost", port: 5672, user: "guest", pass: "guest"
+    host: process.env.QUEUE_HOST, port: process.env.QUEUE_PORT, user: "guest", pass: "guest"
   },
   exchange: "messages",
   exchangeType: "topic"
@@ -16,7 +16,14 @@ function readJsonBody(options) {
   return (req, res, next) => express.json(options)(req, res, next);
 }
 
+async function wait(timeMs) {
+  return new Promise((resolve) => setTimeout(resolve, timeMs));
+}
+
 async function initServer() {
+  // wait for queue to be ready
+  await wait(1000 * 15);
+
   console.log("connecting to queue");
   await queue.connect();
   console.log("queue connected");
@@ -26,7 +33,7 @@ async function initServer() {
   app.get("/statistics", async (req, res) => {
     console.log(`new request to get stats`);
     try {
-      const handlerRes = await axios.get("http://localhost:8001/statistics", { responseType: "stream" });
+      const handlerRes = await axios.get(`http://${process.env.HANDLER_HOST}:${process.env.HANDLER_PORT}/statistics`, { responseType: "stream" });
       handlerRes.data.pipe(res);
     } catch (ex) {
       console.log(ex);
@@ -42,8 +49,8 @@ async function initServer() {
     res.status(200).json({ data: "message dispatched" });
   });
 
-  app.listen(8000, () => {
-    console.log(`api listening on port 8000`);
+  app.listen(process.env.APP_PORT, () => {
+    console.log(`api listening on port ${process.env.APP_PORT}`);
   });  
 }
 

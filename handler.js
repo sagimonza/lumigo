@@ -4,7 +4,7 @@ const FunctionsManager = require("./functionsManager");
 
 const queue = new Queue({
   connectionConfig: {
-    host: "localhost", port: 5672, user: "guest", pass: "guest"
+    host: process.env.QUEUE_HOST, port: process.env.QUEUE_PORT, user: "guest", pass: "guest"
   },
   exchange: "messages",
   exchangeType: "topic"
@@ -17,7 +17,14 @@ async function handleInvocation(msg) {
   functionsManager.dispatchFunction(msgObj.data.message);
 }
 
+async function wait(timeMs) {
+  return new Promise((resolve) => setTimeout(resolve, timeMs));
+}
+
 async function initHandler() {
+  // wait for queue to be ready
+  await wait(1000 * 15);
+
   await queue.subscribe({ queueName: "invocations", eventHandler: handleInvocation });
 
   function readJsonBody(options) {
@@ -35,8 +42,8 @@ async function initHandler() {
     })
   });
 
-  app.listen(8001, () => {
-    console.log(`handler listening on port 8001`);
+  app.listen(process.env.APP_PORT, () => {
+    console.log(`handler listening on port ${process.env.APP_PORT}`);
   });
 }
 
