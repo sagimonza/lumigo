@@ -66,6 +66,8 @@ class Queue {
 
   async _connect() {
     if (this.connection) return true;
+    
+    console.log("connecting to queue");
     const { host, port, user, pass, heartbeat } = this.connectionConfig;
     try {
       this.connection = await amqp.connect({
@@ -96,8 +98,8 @@ class Queue {
     await this._close();
   }
 
-  _handleConnectionError() {
-    console.log("should reconnect");
+  _handleConnectionError(msg) {
+    console.log(`should reconnect due to: ${msg}`);
   }
 
   async _onEvent(eventHandler, msg, queueName, requeue) {
