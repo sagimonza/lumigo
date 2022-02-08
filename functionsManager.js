@@ -44,15 +44,15 @@ class FunctionsManager {
     if (this._availableWorkers.length === 0)
       this._availableWorkers.push({
         process: fork("./function.js"),
-        idleTimer: null,
+        terminationTimer: null,
         initialized: false
       });
     return this._availableWorkers.pop();
   }
 
   _assignWorkerMessage(worker, msg) {
-    clearTimeout(worker.idleTimer);
-    worker.idleTimer = null;
+    clearTimeout(worker.terminationTimer);
+    worker.terminationTimer = null;
     this._busyWorkers.push(worker);
     if (!worker.initialized) {
       worker.process.on("message", (msg) => {
@@ -80,8 +80,8 @@ class FunctionsManager {
   } 
 
   _scheduleWorkerTermination(worker, timeout) {
-    if (worker.idleTimer) clearTimeout(worker.idleTimer);
-    worker.idleTimer = setTimeout(() => worker.process.kill(), timeout);
+    if (worker.terminationTimer) clearTimeout(worker.terminationTimer);
+    worker.terminationTimer = setTimeout(() => worker.process.kill(), timeout);
   }
 
   _removeWorker(worker) {
