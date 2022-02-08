@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 30s
+      retries: 8
+    environment:
+      RABBITMQ_DEFAULT_VHOST: "/"
+      VIRTUAL_HOST: rabbitmq.localhost
+      VIRTUAL_PORT: 15672
+
+  handler:
+    build:
+      context: .
+      dockerfile: ./handler.Dockerfile
+      network: host
+    ports:
+      - "8001:8001"
+    environment:
+      - APP_PORT=8001
+      - QUEUE_HOST=rabbitmq
+      - QUEUE_PORT=5672
+    volumes:
+      - "./output.log:/usr/src/app/output.log"
+    depends_on:
+      - "rabbitmq"
+
+  server:
+    build:
+      context: .
+      dockerfile: ./server.Dockerfile
+      network: host
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_PORT=8000
+      - HANDLER_HOST=handler
+      - HANDLER_PORT=8001
+      - QUEUE_HOST=rabbitmq
+      - QUEUE_PORT=5672
+    depends_on:
+      - "handler"
